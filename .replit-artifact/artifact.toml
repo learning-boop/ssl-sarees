@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "SSL Sarees"
+version = "1.0.0"
+id = "artifacts/ssl-sarees"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19841
+
+[services.development]
+run = "pnpm --filter @workspace/ssl-sarees run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ssl-sarees", "run", "build" ]
+publicDir = "artifacts/ssl-sarees/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19841"
+BASE_PATH = "/"
