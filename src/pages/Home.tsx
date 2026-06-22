@@ -8,6 +8,37 @@ import ProductCard from "@/components/product/ProductCard";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 
+// ─── Video Hero Section ───────────────────────────────────────────────────────
+function VideoHeroSection() {
+  const [videoFailed, setVideoFailed] = useState(false);
+
+  return (
+    <section
+      className="relative w-full h-screen min-h-[480px] overflow-hidden bg-ink"
+      data-testid="video-hero-section"
+    >
+      {!videoFailed ? (
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          src="/hero-video2.mp4"
+          poster="/videos/hero-poster.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
+          onError={() => setVideoFailed(true)}
+          data-testid="hero-video"
+        />
+      ) : (
+        <div
+          className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#6B0F1A] via-[#3a0a10] to-black"
+          data-testid="hero-video-fallback"
+        />
+      )}
+    </section>
+  );
+}
+
 // ─── Hero carousel images ────────────────────────────────────────────────────
 const heroSlides = [
   { src: "assets/hero1.jpg", alt: "Luxury Indian Silk Saree", label: "Heritage Silk" },
@@ -456,18 +487,15 @@ function VideoTile({ src, poster, label, index }: { src: string; poster: string;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [playing, setPlaying] = useState(false);
-  // showControls drives visibility on BOTH hover (desktop) and tap (mobile)
   const [showControls, setShowControls] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-hide controls after 2.5s of inactivity
   const revealControls = () => {
     setShowControls(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setShowControls(false), 2500);
   };
 
-  // Autoplay muted when tile enters viewport
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -486,11 +514,9 @@ function VideoTile({ src, poster, label, index }: { src: string; poster: string;
 
   const handleTileClick = () => {
     if (!showControls) {
-      // First tap on mobile: reveal controls, don't toggle play yet
       revealControls();
       return;
     }
-    // Controls already visible: toggle play/pause
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
       videoRef.current.play();
@@ -518,46 +544,29 @@ function VideoTile({ src, poster, label, index }: { src: string; poster: string;
       transition={{ delay: index * 0.06 }}
       className="relative aspect-square rounded-xl overflow-hidden cursor-pointer bg-foreground/10"
       onClick={handleTileClick}
-      onMouseEnter={revealControls}   // desktop hover
-      onMouseLeave={() => {           // desktop: start hide timer on leave
+      onMouseEnter={revealControls}
+      onMouseLeave={() => {
         if (hideTimer.current) clearTimeout(hideTimer.current);
         hideTimer.current = setTimeout(() => setShowControls(false), 600);
       }}
       data-testid={`video-tile-${index}`}
     >
-      <video
-        ref={videoRef}
-        src={src}
-        poster={poster}
-        muted
-        loop
-        playsInline
-        className="w-full h-full object-cover transition-transform duration-500"
-      />
+      <video ref={videoRef} src={src} poster={poster} muted loop playsInline
+        className="w-full h-full object-cover transition-transform duration-500" />
 
-      {/* ── Always visible: Instagram icon top-right ── */}
       <div className="absolute top-2 right-2 z-10 pointer-events-none">
         <SiInstagram size={14} className="text-white drop-shadow-lg opacity-80" />
       </div>
 
-      {/* ── Always visible: label + gradient at bottom ── */}
       <div className="absolute bottom-0 left-0 right-0 px-2.5 pt-6 pb-2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
         <span className="text-white text-xs font-poppins font-semibold tracking-wide drop-shadow">{label}</span>
       </div>
 
-      {/* ── Conditional overlay (tap on mobile / hover on desktop) ── */}
+      <div className="absolute inset-0 bg-black/40 transition-opacity duration-300 pointer-events-none"
+        style={{ opacity: showControls ? 1 : 0 }} />
 
-      {/* Dark tint */}
-      <div
-        className="absolute inset-0 bg-black/40 transition-opacity duration-300 pointer-events-none"
-        style={{ opacity: showControls ? 1 : 0 }}
-      />
-
-      {/* Centre play/pause button */}
-      <div
-        className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none"
-        style={{ opacity: showControls ? 1 : 0 }}
-      >
+      <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none"
+        style={{ opacity: showControls ? 1 : 0 }}>
         <div className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
           {playing
             ? <Pause size={18} className="text-white" fill="white" />
@@ -565,16 +574,10 @@ function VideoTile({ src, poster, label, index }: { src: string; poster: string;
         </div>
       </div>
 
-      {/* Mute button — bottom-right, above the label */}
-      <div
-        className="absolute bottom-2 right-2 z-10 transition-opacity duration-300"
-        style={{ opacity: showControls ? 1 : 0 }}
-      >
-        <button
-          onClick={toggleMute}
-          aria-label={muted ? "Unmute" : "Mute"}
-          className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20 active:bg-white/40 transition-colors"
-        >
+      <div className="absolute bottom-2 right-2 z-10 transition-opacity duration-300"
+        style={{ opacity: showControls ? 1 : 0 }}>
+        <button onClick={toggleMute} aria-label={muted ? "Unmute" : "Mute"}
+          className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20 active:bg-white/40 transition-colors">
           {muted
             ? <VolumeX size={12} className="text-white" />
             : <Volume2 size={12} className="text-white" />}
@@ -648,6 +651,7 @@ function Newsletter() {
 export default function Home() {
   return (
     <div className="overflow-x-hidden" data-testid="page-home">
+      <VideoHeroSection />
       <HeroSection />
       <FeaturedCategories />
       <NewArrivals />

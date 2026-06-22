@@ -35,6 +35,7 @@ export default function Header() {
   const { totalItems: wishlistCount } = useWishlist();
   const { query, setQuery, results, setIsOpen } = useSearch();
   const [location] = useLocation();
+  const isOverVideo = location === "/" && !scrolled;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -60,6 +61,8 @@ export default function Header() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
             ? "glass shadow-md py-2"
+            : isOverVideo
+            ? "bg-gradient-to-b from-black/55 via-black/20 to-transparent py-4"
             : "bg-transparent py-4"
         }`}
         data-testid="header"
@@ -73,10 +76,12 @@ export default function Header() {
                 whileHover={{ scale: 1.02 }}
                 data-testid="logo"
               >
-                <span className="text-2xl font-serif font-bold text-maroon leading-none tracking-wide">
+                <span className={`text-2xl font-serif font-bold leading-none tracking-wide transition-colors ${isOverVideo ? "text-white" : "text-maroon"}`}>
                   SSL Sarees
                 </span>
-                
+                <span className={`text-xs tracking-[0.2em] font-poppins font-light uppercase transition-colors ${isOverVideo ? "text-gold" : "text-gold"}`}>
+                  Elegance Woven Into Every Thread
+                </span>
               </motion.div>
             </Link>
 
@@ -91,7 +96,7 @@ export default function Header() {
                     onMouseLeave={() => setMegaOpen(false)}
                   >
                     <button
-                      className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-maroon transition-colors font-poppins"
+                      className={`flex items-center gap-1 text-sm font-medium transition-colors font-poppins ${isOverVideo ? "text-white hover:text-gold" : "text-foreground hover:text-maroon"}`}
                       data-testid={`nav-${link.label.toLowerCase()}`}
                     >
                       {link.label}
@@ -127,7 +132,7 @@ export default function Header() {
                   <Link
                     key={link.label}
                     href={link.href}
-                    className="text-sm font-medium text-foreground hover:text-maroon transition-colors font-poppins"
+                    className={`text-sm font-medium transition-colors font-poppins ${isOverVideo ? "text-white hover:text-gold" : "text-foreground hover:text-maroon"}`}
                     data-testid={`nav-${link.label.toLowerCase()}`}
                   >
                     {link.label}
@@ -166,7 +171,7 @@ export default function Header() {
                     setSearchOpen(!searchOpen);
                     if (searchOpen) { setQuery(""); setIsOpen(false); }
                   }}
-                  className="p-2 text-foreground hover:text-maroon transition-colors relative z-10"
+                  className={`p-2 transition-colors relative z-10 ${isOverVideo ? "text-white hover:text-gold" : "text-foreground hover:text-maroon"}`}
                   data-testid="search-button"
                 >
                   <Search size={20} />
@@ -206,7 +211,7 @@ export default function Header() {
 
               {/* Wishlist */}
               <Link href="/wishlist">
-                <button className="relative p-2 text-foreground hover:text-maroon transition-colors" data-testid="wishlist-button">
+                <button className={`relative p-2 transition-colors ${isOverVideo ? "text-white hover:text-gold" : "text-foreground hover:text-maroon"}`} data-testid="wishlist-button">
                   <Heart size={20} />
                   {wishlistCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 bg-maroon text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-poppins font-bold" data-testid="wishlist-count">
@@ -218,7 +223,7 @@ export default function Header() {
 
               {/* Cart */}
               <Link href="/cart">
-                <button className="relative p-2 text-foreground hover:text-maroon transition-colors" data-testid="cart-button">
+                <button className={`relative p-2 transition-colors ${isOverVideo ? "text-white hover:text-gold" : "text-foreground hover:text-maroon"}`} data-testid="cart-button">
                   <ShoppingBag size={20} />
                   {totalItems > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 bg-maroon text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-poppins font-bold" data-testid="cart-count">
@@ -229,13 +234,13 @@ export default function Header() {
               </Link>
 
               {/* Account */}
-              <button className="hidden sm:flex p-2 text-foreground hover:text-maroon transition-colors" data-testid="account-button">
+              <button className={`hidden sm:flex p-2 transition-colors ${isOverVideo ? "text-white hover:text-gold" : "text-foreground hover:text-maroon"}`} data-testid="account-button">
                 <User size={20} />
               </button>
 
               {/* Mobile Menu Toggle */}
               <button
-                className="lg:hidden p-2 text-foreground hover:text-maroon transition-colors"
+                className={`lg:hidden p-2 transition-colors ${isOverVideo ? "text-white hover:text-gold" : "text-foreground hover:text-maroon"}`}
                 onClick={() => setMobileOpen(!mobileOpen)}
                 data-testid="mobile-menu-toggle"
               >
