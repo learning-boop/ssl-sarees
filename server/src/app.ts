@@ -20,10 +20,12 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
-// Serves locally uploaded images. NOTE: on Vercel serverless the disk is
-// not persistent — use full image URLs (or Cloudinary) for product images
-// in production.
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// Serves locally uploaded images — LOCAL DEV ONLY. On Vercel serverless
+// there is no persistent disk (use full image URLs or Cloudinary), and
+// __dirname does not exist in the ESM bundle, so this must be skipped.
+if (!process.env.VERCEL) {
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+}
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
