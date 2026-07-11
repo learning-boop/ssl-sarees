@@ -9,7 +9,9 @@ const router = Router();
 // Where uploaded files get saved on disk, and how they're named.
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, path.join(__dirname, "../../uploads"));
+    // process.cwd() instead of __dirname: works in both CJS (local dev)
+    // and the ESM serverless bundle on Vercel.
+    cb(null, path.join(process.cwd(), "uploads"));
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = crypto.randomBytes(8).toString("hex");
