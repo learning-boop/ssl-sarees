@@ -251,7 +251,8 @@ var products_default = router2;
 import { Router as Router3 } from "express";
 import multer from "multer";
 import crypto from "crypto";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinaryPkg from "cloudinary";
+var cloudinary = cloudinaryPkg.v2 ?? cloudinaryPkg;
 var router3 = Router3();
 var upload = multer({
   storage: multer.memoryStorage(),

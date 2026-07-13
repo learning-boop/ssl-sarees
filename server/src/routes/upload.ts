@@ -1,7 +1,11 @@
 import { Router } from "express";
 import multer from "multer";
 import crypto from "crypto";
-import { v2 as cloudinary } from "cloudinary";
+// Default-import then pick .v2: named imports from CommonJS packages can
+// crash Node's ESM loader on some versions ("Named export not found").
+// A default import is always safe.
+import cloudinaryPkg from "cloudinary";
+const cloudinary = (cloudinaryPkg as any).v2 ?? (cloudinaryPkg as any);
 import { authenticate, requireAdmin } from "../middleware/auth";
 
 const router = Router();
@@ -33,7 +37,7 @@ function uploadToCloudinary(buffer: Buffer): Promise<{ secure_url: string }> {
         public_id: `${Date.now()}-${crypto.randomBytes(6).toString("hex")}`,
         resource_type: "image",
       },
-      (error, result) => {
+      (error: any, result: any) => {
         if (error || !result) reject(error || new Error("Upload failed"));
         else resolve(result as { secure_url: string });
       }
