@@ -401,12 +401,57 @@ export default function Header() {
                 </div>
               ))}
 
+              {/* Account (mobile) — the desktop account icon is hidden on
+                  small screens, so login/logout must live in this menu */}
+              <div className="mt-6 border-t border-border pt-5">
+                {user ? (
+                  <>
+                    <p className="px-2 pb-2 text-xs text-muted-foreground font-poppins truncate">
+                      Signed in as {user.email}
+                    </p>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        className="block py-2.5 px-2 text-base font-poppins text-foreground hover:text-maroon transition-colors"
+                        data-testid="mobile-admin-link"
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
+                    <button
+                      onClick={logout}
+                      className="block w-full text-left py-2.5 px-2 text-base font-poppins text-red-600"
+                      data-testid="mobile-logout-button"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex gap-3">
+                    <Link
+                      href="/login"
+                      className="flex-1 text-center bg-maroon text-white rounded-full py-3 text-sm font-semibold font-poppins"
+                      data-testid="mobile-login-link"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="flex-1 text-center border border-maroon text-maroon rounded-full py-3 text-sm font-semibold font-poppins"
+                      data-testid="mobile-register-link"
+                    >
+                      Create Account
+                    </Link>
+                  </div>
+                )}
+              </div>
+
               {/* WhatsApp (mobile) */}
               <a
                 href={WHATSAPP_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-6 flex items-center justify-center gap-2 bg-[#25D366] text-white rounded-full py-3 text-sm font-semibold font-poppins shadow-md"
+                className="mt-4 flex items-center justify-center gap-2 bg-[#25D366] text-white rounded-full py-3 text-sm font-semibold font-poppins shadow-md"
                 data-testid="mobile-whatsapp-button"
               >
                 <WhatsAppIcon size={18} />
