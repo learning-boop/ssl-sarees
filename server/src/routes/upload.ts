@@ -1,27 +1,22 @@
 import { Router } from "express";
 import multer from "multer";
-import path from "path";
 import crypto from "crypto";
+import { v2 as cloudinary } from "cloudinary";
 import { authenticate, requireAdmin } from "../middleware/auth";
 
 const router = Router();
 
-// Where uploaded files get saved on disk, and how they're named.
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    // process.cwd() instead of __dirname: works in both CJS (local dev)
-    // and the ESM serverless bundle on Vercel.
-    cb(null, path.join(process.cwd(), "uploads"));
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = crypto.randomBytes(8).toString("hex");
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${uniqueSuffix}${ext}`);
-  },
-});
+// Files are held in MEMORY (never written to disk) and streamed straight
+// to Cloudinary. This is required on Vercel serverless, where there is no
+// persistent filesystem — and it also means images survive forever and are
+// served from Cloudinary's fast global CDN.
+//
+// Configuration comes from the CLOUDINARY_URL environment variable
+// (format: cloudinary://<api_key>:<api_secret>@<cloud_name>), which the
+// Cloudinary SDK picks up automatically.
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per image
   fileFilter: (_req, file, cb) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -30,20 +25,43 @@ const upload = multer({
   },
 });
 
+function uploadToCloudinary(buffer: Buffer): Promise<{ secure_url: string }> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "ssl-sarees/products",
+        public_id: `${Date.now()}-${crypto.randomBytes(6).toString("hex")}`,
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error || !result) reject(error || new Error("Upload failed"));
+        else resolve(result as { secure_url: string });
+      }
+    );
+    stream.end(buffer);
+  });
+}
+
 /**
- * POST /api/upload — admin only. Accepts a single image file under the
- * field name "image", saves it to /uploads, and returns the URL the
- * frontend should use (which gets stored in a product's images array).
+ * POST /api/upload — admin only. Accepts a single image under the field
+ * name "image", uploads it to Cloudinary, and returns the permanent
+ * https URL to store in the product's images array.
  */
-router.post("/", authenticate, requireAdmin, upload.single("image"), (req, res) => {
+router.post("/", authenticate, requireAdmin, upload.single("image"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No image file was uploaded" });
   }
-  // Full absolute URL (not just "/uploads/xxx.jpg") so it works as a
-  // normal <img src="..."> anywhere in the app, exactly like the
-  // external image URLs your existing products already use.
-  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-  res.status(201).json({ url });
+  if (!process.env.CLOUDINARY_URL) {
+    return res.status(500).json({
+      message: "Image storage is not configured (CLOUDINARY_URL missing). Add it in Vercel environment variables.",
+    });
+  }
+  try {
+    const result = await uploadToCloudinary(req.file.buffer);
+    res.status(201).json({ url: result.secure_url });
+  } catch (err) {
+    res.status(500).json({ message: "Image upload failed: " + (err as Error).message });
+  }
 });
 
 export default router;

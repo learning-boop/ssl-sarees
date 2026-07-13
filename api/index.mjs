@@ -2,7 +2,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import path2 from "path";
+import path from "path";
 
 // server/src/routes/auth.ts
 import { Router } from "express";
@@ -250,21 +250,11 @@ var products_default = router2;
 // server/src/routes/upload.ts
 import { Router as Router3 } from "express";
 import multer from "multer";
-import path from "path";
 import crypto from "crypto";
+import { v2 as cloudinary } from "cloudinary";
 var router3 = Router3();
-var storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, path.join(process.cwd(), "uploads"));
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = crypto.randomBytes(8).toString("hex");
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${uniqueSuffix}${ext}`);
-  }
-});
 var upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   // 5MB per image
   fileFilter: (_req, file, cb) => {
@@ -273,12 +263,37 @@ var upload = multer({
     else cb(new Error("Only JPG, PNG, WEBP, or GIF images are allowed"));
   }
 });
-router3.post("/", authenticate, requireAdmin, upload.single("image"), (req, res) => {
+function uploadToCloudinary(buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "ssl-sarees/products",
+        public_id: `${Date.now()}-${crypto.randomBytes(6).toString("hex")}`,
+        resource_type: "image"
+      },
+      (error, result) => {
+        if (error || !result) reject(error || new Error("Upload failed"));
+        else resolve(result);
+      }
+    );
+    stream.end(buffer);
+  });
+}
+router3.post("/", authenticate, requireAdmin, upload.single("image"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No image file was uploaded" });
   }
-  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-  res.status(201).json({ url });
+  if (!process.env.CLOUDINARY_URL) {
+    return res.status(500).json({
+      message: "Image storage is not configured (CLOUDINARY_URL missing). Add it in Vercel environment variables."
+    });
+  }
+  try {
+    const result = await uploadToCloudinary(req.file.buffer);
+    res.status(201).json({ url: result.secure_url });
+  } catch (err) {
+    res.status(500).json({ message: "Image upload failed: " + err.message });
+  }
 });
 var upload_default = router3;
 
@@ -588,7 +603,7 @@ var allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173").split(
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 if (!process.env.VERCEL) {
-  app.use("/uploads", express.static(path2.join(process.cwd(), "uploads")));
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 }
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", auth_default);
