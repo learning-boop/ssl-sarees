@@ -370,15 +370,16 @@ function useOrders() {
 
 // ---------- Dashboard (stats) section ----------
 
-function StatCard({ label, value, sub, Icon, iconClass }: { label: string; value: string; sub?: string; Icon: any; iconClass: string }) {
+function StatCard({ label, value, sub, Icon, iconClass, accent }: { label: string; value: string; sub?: string; Icon: any; iconClass: string; accent: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-black/5 p-5 flex items-start gap-4">
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconClass}`}>
-        <Icon size={20} />
+    <div className="relative overflow-hidden bg-white rounded-2xl border border-black/5 p-5 flex items-start gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+      <div className={`absolute inset-x-0 top-0 h-1 ${accent}`} />
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm ${iconClass}`}>
+        <Icon size={22} />
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-muted-foreground font-poppins uppercase tracking-wider">{label}</p>
-        <p className="text-2xl font-bold font-poppins text-foreground mt-0.5">{value}</p>
+        <p className="text-[11px] text-muted-foreground font-poppins uppercase tracking-widest">{label}</p>
+        <p className="text-[26px] leading-8 font-bold font-poppins text-foreground mt-1">{value}</p>
         {sub && <p className="text-xs text-muted-foreground font-poppins mt-0.5">{sub}</p>}
       </div>
     </div>
@@ -397,13 +398,13 @@ function DashboardSection({ onViewOrder }: { onViewOrder: (o: OrderDTO) => void 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Orders Received" value={String(orders.length)} sub={`${inProgress.length} in progress`} Icon={ShoppingBag} iconClass="bg-maroon/10 text-maroon" />
-        <StatCard label="Delivered" value={String(delivered.length)} sub={orders.length ? `${Math.round((delivered.length / orders.length) * 100)}% of all orders` : undefined} Icon={CheckCircle2} iconClass="bg-green-100 text-green-700" />
-        <StatCard label="Pending / Shipping" value={String(inProgress.length)} sub="awaiting delivery" Icon={Clock} iconClass="bg-amber-100 text-amber-700" />
-        <StatCard label="Total Income" value={formatINR(revenue)} sub={`${formatINR(deliveredRevenue)} from delivered`} Icon={IndianRupee} iconClass="bg-gold/20 text-yellow-700" />
+        <StatCard label="Orders Received" value={String(orders.length)} sub={`${inProgress.length} in progress`} Icon={ShoppingBag} iconClass="bg-gradient-to-br from-maroon to-red-900 text-white" accent="bg-gradient-to-r from-maroon to-red-800" />
+        <StatCard label="Delivered" value={String(delivered.length)} sub={orders.length ? `${Math.round((delivered.length / orders.length) * 100)}% of all orders` : undefined} Icon={CheckCircle2} iconClass="bg-gradient-to-br from-emerald-500 to-green-700 text-white" accent="bg-gradient-to-r from-emerald-400 to-green-600" />
+        <StatCard label="Pending / Shipping" value={String(inProgress.length)} sub="awaiting delivery" Icon={Clock} iconClass="bg-gradient-to-br from-amber-400 to-orange-600 text-white" accent="bg-gradient-to-r from-amber-400 to-orange-500" />
+        <StatCard label="Total Income" value={formatINR(revenue)} sub={`${formatINR(deliveredRevenue)} from delivered`} Icon={IndianRupee} iconClass="bg-gradient-to-br from-yellow-400 to-amber-600 text-white" accent="bg-gradient-to-r from-gold to-amber-500" />
       </div>
 
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-black/5">
           <h3 className="font-serif text-lg text-foreground">Recent Orders</h3>
         </div>
@@ -426,7 +427,7 @@ function DashboardSection({ onViewOrder }: { onViewOrder: (o: OrderDTO) => void 
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No orders yet. They will appear here as customers check out.</TableCell></TableRow>
             )}
             {orders.slice(0, 6).map((o) => (
-              <TableRow key={o.id}>
+              <TableRow key={o.id} className="hover:bg-beige/40 transition-colors">
                 <TableCell className="font-poppins text-sm font-semibold">{o.orderNumber}</TableCell>
                 <TableCell className="font-poppins text-sm">{o.customer.firstName} {o.customer.lastName}</TableCell>
                 <TableCell className="font-poppins text-sm">{formatDate(o.createdAt)}</TableCell>
@@ -460,7 +461,7 @@ function OrdersSection({ onViewOrder }: { onViewOrder: (o: OrderDTO) => void }) 
   });
 
   return (
-    <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-black/5 overflow-hidden shadow-sm">
       <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between">
         <h3 className="font-serif text-lg text-foreground">All Orders</h3>
         <span className="text-xs text-muted-foreground font-poppins">{orders.length} total</span>
@@ -487,7 +488,7 @@ function OrdersSection({ onViewOrder }: { onViewOrder: (o: OrderDTO) => void }) 
               <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No orders yet.</TableCell></TableRow>
             )}
             {orders.map((o) => (
-              <TableRow key={o.id} data-testid={`order-row-${o.orderNumber}`}>
+              <TableRow key={o.id} data-testid={`order-row-${o.orderNumber}`} className="hover:bg-beige/40 transition-colors">
                 <TableCell className="font-poppins text-sm font-semibold whitespace-nowrap">{o.orderNumber}</TableCell>
                 <TableCell className="font-poppins text-sm">
                   <div>{o.customer.firstName} {o.customer.lastName}</div>
@@ -635,7 +636,7 @@ function ProductsSection() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -655,7 +656,7 @@ function ProductsSection() {
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No products yet. Add your first one.</TableCell></TableRow>
             )}
             {products.map((product) => (
-              <TableRow key={product.id} data-testid={`product-row-${product.id}`}>
+              <TableRow key={product.id} data-testid={`product-row-${product.id}`} className="hover:bg-beige/40 transition-colors">
                 <TableCell className="flex items-center gap-3">
                   <img src={product.images[0]} alt={product.name} className="w-10 h-12 object-cover rounded" />
                   <span className="font-poppins">{product.name}</span>
@@ -749,10 +750,15 @@ export default function AdminDashboard() {
 
           {/* Sidebar */}
           <aside className="lg:w-60 flex-shrink-0">
-            <div className="bg-white rounded-2xl border border-black/5 p-3 lg:sticky lg:top-24">
-              <div className="hidden lg:block px-3 py-3 mb-2 border-b border-black/5">
-                <p className="font-serif text-lg text-maroon leading-none">SSL Sarees</p>
-                <p className="text-[11px] text-muted-foreground font-poppins mt-1 truncate">{user?.email}</p>
+            <div className="bg-white rounded-2xl border border-black/5 p-3 lg:sticky lg:top-24 shadow-sm">
+              <div className="hidden lg:flex items-center gap-3 px-3 py-4 mb-2 border-b border-black/5">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-maroon to-red-900 text-white flex items-center justify-center font-serif text-lg shadow-sm flex-shrink-0">
+                  {(user?.name || user?.email || "A").charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-serif text-base text-maroon leading-tight">SSL Sarees</p>
+                  <p className="text-[11px] text-muted-foreground font-poppins truncate">{user?.email}</p>
+                </div>
               </div>
               <nav className="flex lg:flex-col gap-1">
                 {NAV_ITEMS.map(({ id, label, Icon }) => (
@@ -760,7 +766,7 @@ export default function AdminDashboard() {
                     key={id}
                     onClick={() => setTab(id)}
                     className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-poppins font-medium transition-colors flex-1 lg:flex-none justify-center lg:justify-start ${
-                      tab === id ? "bg-maroon text-white" : "text-foreground hover:bg-beige"
+                      tab === id ? "bg-gradient-to-r from-maroon to-red-900 text-white shadow-md" : "text-foreground hover:bg-beige"
                     }`}
                     data-testid={`admin-nav-${id}`}
                   >

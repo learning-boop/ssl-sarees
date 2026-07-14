@@ -1,4 +1,5 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
+import ScrollToTop from "@/components/common/ScrollToTop";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -62,6 +63,7 @@ function App() {
             <WishlistProvider>
               <SearchProvider>
                 <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                  <ScrollToTop />
                   <Router />
                 </WouterRouter>
                 <Toaster />
