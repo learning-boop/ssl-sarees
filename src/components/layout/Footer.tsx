@@ -14,10 +14,10 @@ const quickLinks = [
 
 const supportLinks = [
   { label: "FAQ", href: "/contact" },
-  { label: "Returns & Exchange", href: "/contact" },
-  { label: "Shipping Policy", href: "/contact" },
-  { label: "Terms & Conditions", href: "/contact" },
-  { label: "Privacy Policy", href: "/contact" },
+  { label: "Returns & Exchange", href: "/refund-policy" },
+  { label: "Shipping Policy", href: "/refund-policy" },
+  { label: "Terms & Conditions", href: "/terms" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Size Guide", href: "/contact" },
 ];
 
@@ -140,8 +140,6 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-
-        
 
         {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">

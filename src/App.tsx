@@ -24,7 +24,9 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import NotFound from "@/pages/not-found";
-
+import Terms from "@/pages/Terms";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import RefundPolicy from "@/pages/RefundPolicy";
 const queryClient = new QueryClient();
 
 function Router() {
@@ -42,6 +44,9 @@ function Router() {
         <Route path="/contact" component={Contact} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/refund-policy" component={RefundPolicy} />
         <Route path="/admin">
           <ProtectedRoute adminOnly>
             <AdminDashboard />
