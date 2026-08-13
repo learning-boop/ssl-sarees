@@ -12,6 +12,12 @@ import Autoplay from "embla-carousel-autoplay";
 // ─── Video Hero Section ───────────────────────────────────────────────────────
 function VideoHeroSection() {
   const [videoFailed, setVideoFailed] = useState(false);
+  // Serve 720p to phones (saves ~10MB of data), 1080p to everything else
+  const [videoSrc] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth < 768
+      ? "/hero-video-mobile.mp4"
+      : "/hero-video-hd.mp4"
+  );
 
   return (
     <section
@@ -21,8 +27,9 @@ function VideoHeroSection() {
       {!videoFailed ? (
         <video
           className="absolute inset-0 w-full h-full object-cover"
-          src="/hero-video3.mp4"
-          poster="/videos/hero-poster.jpg"
+          src={videoSrc}
+          poster="/hero-poster.jpg"
+          preload="auto"
           autoPlay
           muted
           loop
