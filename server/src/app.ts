@@ -8,6 +8,7 @@ import uploadRoutes from "./routes/upload";
 import cartRoutes from "./routes/cart";
 import wishlistRoutes from "./routes/wishlist";
 import orderRoutes from "./routes/orders";
+import paymentRoutes from "./routes/payment";
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Fallback error handler so unexpected errors return JSON, not an HTML stack trace.
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
