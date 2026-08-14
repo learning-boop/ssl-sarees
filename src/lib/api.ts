@@ -175,6 +175,25 @@ export interface CreateOrderInput {
   paymentMethod: string;
 }
 
+// ---- Payments (Razorpay) ----
+export const paymentApi = {
+  createOrder: (amount: number) =>
+    request<{ orderId: string; amount: number; currency: string; keyId: string }>(
+      "/payment/create-order",
+      { method: "POST", body: JSON.stringify({ amount }) }
+    ),
+
+  verify: (payload: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }) =>
+    request<{ valid: boolean }>("/payment/verify", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+};
+
 export const ordersApi = {
   create: (order: CreateOrderInput) =>
     request<{ order: OrderDTO }>("/orders", {
