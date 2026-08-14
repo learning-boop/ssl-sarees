@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { Check, CreditCard, Smartphone, Landmark, Banknote, ChevronDown, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { ordersApi } from "@/lib/api";
+import { ordersApi, paymentApi } from "@/lib/api";
 
 interface FormData {
   firstName: string;
@@ -30,6 +30,19 @@ const STATES = [
   "Maharashtra", "Rajasthan", "Tamil Nadu", "Telangana", "Uttar Pradesh", "West Bengal"
 ];
 
+
+// Injects the Razorpay checkout script once, on demand.
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) return resolve(true);
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 export default function Checkout() {
   const { items, subtotal, shipping, total, couponDiscount, clearCart } = useCart();
   const [payment, setPayment] = useState("upi");
@@ -47,37 +60,102 @@ export default function Checkout() {
   const onSubmit = async (data: FormData) => {
     setSubmitting(true);
     setOrderError(null);
+
+    const orderPayload = {
+      customer: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+      },
+      items: items.map((i) => ({
+        productId: i.product.id,
+        name: i.product.name,
+        image: i.product.images[0] || "",
+        price: i.product.discountedPrice,
+        quantity: i.quantity,
+      })),
+      subtotal,
+      shipping,
+      discount: discountAmount,
+      total,
+      paymentMethod: payment,
+    };
+
     try {
-      const { order } = await ordersApi.create({
-        customer: {
-          firstName: data.firstName,
-          lastName: data.lastName,
+      // Cash on Delivery — no payment gateway, create the order directly.
+      if (payment === "cod") {
+        const { order } = await ordersApi.create(orderPayload);
+        setOrderNumber(order.orderNumber);
+        setSuccess(true);
+        clearCart();
+        setSubmitting(false);
+        return;
+      }
+
+      // Online payment (UPI / Card / Net Banking) via Razorpay popup.
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        throw new Error("Could not load the payment gateway. Please check your connection and try again.");
+      }
+
+      const { orderId, amount, currency, keyId } = await paymentApi.createOrder(total);
+
+      const rzp = new (window as any).Razorpay({
+        key: keyId,
+        amount,
+        currency,
+        name: "SSL Sarees",
+        description: "Order Payment",
+        order_id: orderId,
+        prefill: {
+          name: `${data.firstName} ${data.lastName}`,
           email: data.email,
-          phone: data.phone,
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          pincode: data.pincode,
+          contact: data.phone,
         },
-        items: items.map((i) => ({
-          productId: i.product.id,
-          name: i.product.name,
-          image: i.product.images[0] || "",
-          price: i.product.discountedPrice,
-          quantity: i.quantity,
-        })),
-        subtotal,
-        shipping,
-        discount: discountAmount,
-        total,
-        paymentMethod: payment,
+        theme: { color: "#7a1f2b" },
+        modal: {
+          ondismiss: () => {
+            setSubmitting(false);
+            setOrderError("Payment was cancelled. You have not been charged.");
+          },
+        },
+        handler: async (response: any) => {
+          try {
+            const { valid } = await paymentApi.verify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            if (!valid) {
+              throw new Error("Payment verification failed. If any amount was deducted, Razorpay will auto-refund it.");
+            }
+            const { order } = await ordersApi.create({
+              ...orderPayload,
+              paymentMethod: `Paid Online — Razorpay (${response.razorpay_payment_id})`,
+            });
+            setOrderNumber(order.orderNumber);
+            setSuccess(true);
+            clearCart();
+          } catch (err) {
+            setOrderError(
+              (err as Error).message ||
+                "Payment went through but the order could not be saved. Contact us on WhatsApp with your payment details."
+            );
+          } finally {
+            setSubmitting(false);
+          }
+        },
       });
-      setOrderNumber(order.orderNumber);
-      setSuccess(true);
-      clearCart();
+      rzp.open();
+      // Keep the button disabled while the Razorpay popup is open;
+      // ondismiss / handler above re-enable it.
     } catch (err) {
       setOrderError((err as Error).message || "Could not place the order. Please try again.");
-    } finally {
       setSubmitting(false);
     }
   };
